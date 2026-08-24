@@ -1,5 +1,5 @@
-# the-bookfather
-The Bookfather.
+# The Bookfather
+
 
 # Features
 
@@ -23,10 +23,16 @@ https://www.kaggle.com/datasets/elvinrustam/books-dataset
 
 
 ## Books Dataset 02
-Kaggle dataset overview by authors: This dataset has been compiled by Cai-Nicolas Ziegler in 2004, and it comprises of three tables for users, books and ratings. Explicit ratings are expressed on a scale from 1-10 (higher values denoting higher appreciation) and implicit rating is expressed by 0
+Overview by authors: Kaggle dataset overview by authors: This dataset has been compiled by Cai-Nicolas Ziegler in 2004, and it comprises of three tables for users, books and ratings. Explicit ratings are expressed on a scale from 1-10 (higher values denoting higher appreciation) and implicit rating is expressed by 0
 
 https://www.kaggle.com/datasets/saurabhbagchi/books-dataset
 http://www2.informatik.uni-freiburg.de/~cziegler/BX/
+
+
+## Best Books Ever Dataset
+The dataset has been collected in the frame of the Prac1 of the subject Tipology and Data Life Cycle of the Master's Degree in Data Science of the Universitat Oberta de Catalunya (UOC).
+
+https://zenodo.org/records/4265096
 
 
 ## Goodreads Book Graph Datasets
@@ -37,6 +43,7 @@ Basic Statistics of the Complete Book Graph:
 - 876,145 users; 228,648,342 user-book interactions in users' shelves (include 112,131,203 reads and 104,551,549 ratings)
 
 https://cseweb.ucsd.edu/~jmcauley/datasets/goodreads.html
+
 
 ## Other sources
 
