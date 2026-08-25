@@ -1,5 +1,6 @@
 # The Bookfather
 
+Full documentation (setup, data pipeline, database schema, API): [docs/index.md](docs/index.md)
 
 # Features
 

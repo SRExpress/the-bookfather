@@ -1,0 +1,7 @@
+pandas>=2.3
+requests>=2.32
+pyarrow>=17.0
+rapidfuzz>=3.9
+fastapi>=0.115
+uvicorn[standard]>=0.32
+pydantic>=2.9
