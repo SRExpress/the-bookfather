@@ -4,15 +4,23 @@
 # Features
 
 ## Data cleaning and alignment
+Align the different sources of dataset, and create a unified sqlite DB schema.
 
 ## API services
+Create CRUD API services to interact with the data.
+- Search using string matching
+- Similar books search if no string match
 
 ## Book recommendation
+- new to books, here are the best 5 by genre
+- read a few books? let us know and we'll recommend
 
 ## Agentic AI interface
+- AI based contextual book search
+- Use agentic memory to build user intent overtime based on their journey with books
 
 ## Learning from Experience
-
+- Ask a question, and we'll recommend a book that may answer your question
 
 # Dataset Resources
 
