@@ -1,9 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Read(./**)",
-      "Edit(./**)",
-      "Read(./.claude/**)",
+      "Read(/**)",
+      "Edit(/**)",
+      "Read(/.claude/**)",
+      "Bash",
       "Bash(docker *)",
       "Bash(docker-compose *)",
       "Bash(docker compose *)",
