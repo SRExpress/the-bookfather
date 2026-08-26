@@ -1,0 +1,29 @@
+# The Bookfather - API service stack.
+# Run from the project root with:
+#   docker compose --env-file docker/env/.env -f docker/compose/docker-compose-sys-01.yaml up -d --build
+#
+# The dataset (data/bookfather.db, raw sources, processed parquet) is NOT baked into the
+# image - it's bind-mounted from the host so the image stays small and rebuilding the DB
+# (src.db.build_db, run on the host or in a one-off container) is instantly visible to the
+# running API without an image rebuild.
+services:
+  api:
+    build:
+      context: ../..
+      dockerfile: docker/api/Dockerfile
+    image: bookfather-api:latest
+    container_name: bookfather-api
+    env_file:
+      - ../env/.env
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      - ../../data:/app/data:ro
+      - ../../logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

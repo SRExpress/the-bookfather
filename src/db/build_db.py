@@ -132,8 +132,23 @@ def _insert_fts(conn: sqlite3.Connection, books_df: pd.DataFrame) -> None:
     )
 
 
+def _drop_titleless_books(books_df: pd.DataFrame, sources_df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """A canonical group can end up with no usable title if every contributing source row had
+    an empty title (e.g. an ISBN-only goodreads match) - `books.title` is NOT NULL, so drop
+    these rather than failing the whole load. Rare; logged so the count is visible.
+    """
+    has_title = books_df["title"].notna() & (books_df["title"].astype(str).str.strip() != "")
+    dropped = len(books_df) - has_title.sum()
+    if dropped:
+        logger.warning("Dropping %d canonical book(s) with no usable title in any source", dropped)
+    kept_books = books_df[has_title]
+    kept_sources = sources_df[sources_df["book_id"].isin(kept_books["book_id"])]
+    return kept_books, kept_sources
+
+
 def build(db_path=DB_PATH) -> None:
     books_df, sources_df = _load_processed()
+    books_df, sources_df = _drop_titleless_books(books_df, sources_df)
 
     if db_path.exists():
         logger.info("Removing existing database at %s", db_path)

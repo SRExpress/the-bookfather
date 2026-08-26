@@ -1,0 +1,16 @@
+.git/
+.gitignore
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+data/
+logs/
+docs/
+docker/
+.claude/
+*.md
+.env
+.DS_Store

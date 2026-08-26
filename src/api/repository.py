@@ -13,8 +13,15 @@ _FTS_TOKEN = re.compile(r"[A-Za-z0-9]+")
 
 
 def get_connection() -> sqlite3.Connection:
+    """Open a fresh, request-scoped, read-only connection.
+
+    check_same_thread=False: FastAPI runs sync dependency generators via anyio's threadpool,
+    which can hand the setup and teardown halves of a `yield` dependency to different worker
+    threads. Each connection here is still only ever used within a single request's lifecycle
+    (never shared across requests), so relaxing sqlite3's same-thread check is safe.
+    """
     logger.debug("Opening SQLite connection to %s", DB_PATH)
-    conn = sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True)
+    conn = sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True, check_same_thread=False)
     conn.row_factory = sqlite3.Row
     return conn
 

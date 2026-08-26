@@ -23,6 +23,7 @@ See the top-level [README.md](../README.md) for the full product feature list.
 | [Data Cleaning](data-cleaning/index.md) | Normalization rules and the cross-source dedup strategy |
 | [Database](database/schema.md) | SQLite schema, ER diagram, design rationale |
 | [Scripts](scripts/index.md) | How to run the downloader, cleaning pipeline, and DB build |
+| [Deployment](deployment.md) | Docker image + compose setup, volume-mounted dataset |
 | [SQL Queries](sql/useful-queries.md) | Copy-pasteable queries for exploring `data/bookfather.db` |
 | [API](api/endpoints.md) | Search API endpoints, request/response shapes |
 
