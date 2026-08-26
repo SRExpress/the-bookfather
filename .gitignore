@@ -1,3 +1,6 @@
+# Logs (Bookfather pipeline/API rotating log files)
+logs/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
@@ -216,3 +219,6 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Ignore data
+data
