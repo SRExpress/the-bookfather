@@ -64,11 +64,7 @@
       "Bash(rm -rf ./.claude*)",
       "Bash(rm -r .claude*)",
       "Bash(rm .claude*)",
-      "Bash(rm -rf -- .claude*)",
-      "Read(../**)",
-      "Edit(../**)",
-      "Read(~/**)",
-      "Edit(~/**)"
+      "Bash(rm -rf -- .claude*)"
     ]
   }
 }
