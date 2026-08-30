@@ -8,6 +8,11 @@ App: [`src/api/main.py`](../../src/api/main.py) ·
 Package: [`src/recommend/`](../../src/recommend/) ·
 Offline builder: [`src/recommend/build_artifacts.py`](../../src/recommend/build_artifacts.py)
 
+> Companion plan: **[LLM-Derived Book Features](llm-derived-features.md)** — the structured,
+> provenanced per-book feature record (endorsements, narrative craft, emotional profile,
+> test-of-time, comparables…) that the personalised methods below depend on, plus a
+> self-correcting emotion engine and an implementation prompt.
+
 <details open>
 <summary><strong>Scope: this is query→item, not user→item</strong></summary>
 

@@ -27,6 +27,7 @@ See the top-level [README.md](../README.md) for the full product feature list.
 | [SQL Queries](sql/useful-queries.md) | Copy-pasteable queries for exploring `data/bookfather.db` |
 | [API](api/endpoints.md) | Search + recommendation endpoints, request/response shapes |
 | [Recommendation](recommendation/index.md) | The 6 query→book methods (efficient→intelligent): concept, pros/cons, how to improve |
+| [LLM-Derived Features](recommendation/llm-derived-features.md) | Plan: structured per-book features from an LLM (endorsements, craft, emotion, test-of-time…), the self-correcting emotion engine, and how they feed personalised recs |
 
 ## Pipeline at a glance
 
