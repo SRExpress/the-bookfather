@@ -22,10 +22,11 @@ See the top-level [README.md](../README.md) for the full product feature list.
 | [Exploratory Data Analysis](eda/index.md) | Per-source profiling: shape, nulls, key coverage |
 | [Data Cleaning](data-cleaning/index.md) | Normalization rules and the cross-source dedup strategy |
 | [Database](database/schema.md) | SQLite schema, ER diagram, design rationale |
-| [Scripts](scripts/index.md) | How to run the downloader, cleaning pipeline, and DB build |
+| [Scripts](scripts/index.md) | How to run the downloader, cleaning pipeline, DB build, and artifact build |
 | [Deployment](deployment.md) | Docker image + compose setup, volume-mounted dataset |
 | [SQL Queries](sql/useful-queries.md) | Copy-pasteable queries for exploring `data/bookfather.db` |
-| [API](api/endpoints.md) | Search API endpoints, request/response shapes |
+| [API](api/endpoints.md) | Search + recommendation endpoints, request/response shapes |
+| [Recommendation](recommendation/index.md) | The 6 query→book methods (efficient→intelligent): concept, pros/cons, how to improve |
 
 ## Pipeline at a glance
 
@@ -37,7 +38,9 @@ flowchart LR
     D[Goodreads Book Graph<br/>metadata] --> M
     M --> P[data/processed/*.parquet]
     P --> S[(data/bookfather.db<br/>SQLite)]
-    S --> API[FastAPI search service]
+    S --> API[FastAPI search +<br/>recommendation service]
+    S --> AR[data/artifacts/*<br/>tfidf · lsa · semantic]
+    AR --> API
 
     style A stroke:#4C6EF5,stroke-width:2px
     style B stroke:#4C6EF5,stroke-width:2px
@@ -46,5 +49,6 @@ flowchart LR
     style M stroke:#F76707,stroke-width:2px
     style P stroke:#37B24D,stroke-width:2px
     style S stroke:#37B24D,stroke-width:2px
+    style AR stroke:#1098AD,stroke-width:2px
     style API stroke:#AE3EC9,stroke-width:2px
 ```

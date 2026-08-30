@@ -10,8 +10,10 @@ All commands assume the project root as the working directory and a Python envir
 ./scripts/run_pipeline.sh
 ```
 
-Downloads Goodreads metadata (skips already-cached files), cleans/merges all 4 sources, and
-rebuilds `data/bookfather.db`. Safe to re-run any time.
+Downloads Goodreads metadata (skips already-cached files), cleans/merges all 4 sources,
+rebuilds `data/bookfather.db`, and builds the `tfidf` + `lsa` recommendation artifacts. Safe
+to re-run any time. (The `semantic` artifact is not built here — it needs the optional DL
+stack; see step 5.)
 
 </details>
 
@@ -62,12 +64,42 @@ normalized authors/genres, provenance, and the FTS5 search index. Logs: `logs/db
 </details>
 
 <details>
-<summary><strong>4. Run the API</strong></summary>
+<summary><strong>4. Build recommendation artifacts</strong></summary>
+
+```bash
+python -m src.recommend.build_artifacts --methods tfidf,lsa                    # base install
+python -m src.recommend.build_artifacts --methods tfidf,lsa --max-books 300000 # full default scope
+```
+
+Builds the vector-space artifacts the `tfidf` and `lsa` recommendation methods load at API
+start-up, over the top `--max-books` titles (by ratings count) that have a description. Writes
+atomically to `data/artifacts/<method>/`. Without an artifact the method reports itself
+unavailable and `GET /recommend?method=...` returns `503`. Logs: `logs/recommend_build.log`.
+Full flag reference and per-method explanation: [Recommendation](../recommendation/index.md).
+
+</details>
+
+<details>
+<summary><strong>5. Build the semantic (deep-learning) artifact — optional</strong></summary>
+
+```bash
+pip install -r requirements-dl.txt
+python -m src.recommend.build_artifacts --methods semantic
+```
+
+Pulls in PyTorch + sentence-transformers (kept out of the base install and the Docker image),
+then encodes every book blurb with `all-MiniLM-L6-v2`. Enables the `semantic` method.
+
+</details>
+
+<details>
+<summary><strong>6. Run the API</strong></summary>
 
 ```bash
 python -m uvicorn src.api.main:app --reload
 ```
 
-See [API Endpoints](../api/endpoints.md). Logs: `logs/api.log`.
+See [API Endpoints](../api/endpoints.md). Logs: `logs/api.log`. On start-up it warm-loads
+whatever recommendation artifacts are present and logs which methods are available.
 
 </details>

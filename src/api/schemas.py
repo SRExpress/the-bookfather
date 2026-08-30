@@ -35,6 +35,34 @@ class GenreCount(BaseModel):
     book_count: int
 
 
+class RecommendationItem(BookSummary):
+    """A ranked recommendation: a book plus why it surfaced. ``score`` is
+    method-specific and only meaningful for ordering within one response.
+    """
+
+    score: float
+    reason: str
+
+
+class RecommendResponse(BaseModel):
+    query: str
+    method: str
+    count: int
+    results: list[RecommendationItem]
+
+
+class MethodInfo(BaseModel):
+    """One row of ``GET /recommend/methods`` - what a method is and whether it
+    can serve a request right now.
+    """
+
+    name: str
+    tier: str
+    description: str
+    available: bool
+    unavailable_reason: str = ""
+
+
 class HealthResponse(BaseModel):
     status: str
     book_count: int

@@ -59,9 +59,48 @@ README's "best 5 by genre" recommendation feature.
 </details>
 
 <details>
+<summary><strong>GET /recommend/methods</strong></summary>
+
+Lists the six recommendation methods in efficient→intelligent order, each with its `tier`, a
+one-line description, whether it's `available` right now, and (if not) an `unavailable_reason`
+that says how to enable it. Availability is evaluated live.
+
+```json
+[
+  {"name": "popularity", "tier": "baseline", "available": true, "unavailable_reason": ""},
+  {"name": "semantic", "tier": "deep-learning", "available": false,
+   "unavailable_reason": "Optional deep-learning stack not installed. Run: pip install -r requirements-dl.txt ..."}
+]
+```
+
+</details>
+
+<details>
+<summary><strong>GET /recommend?q=&method=&limit=</strong></summary>
+
+Recommend books from a **free-text query**. `q` is required; `method` defaults to `hybrid`
+(one of `popularity`, `lexical`, `tfidf`, `lsa`, `semantic`, `hybrid`); `limit` defaults to 20
+(max 100). Each result carries a method-specific `score` (compare only within one response)
+and a short `reason`.
+
+```bash
+curl "http://127.0.0.1:8000/recommend?q=a+hopeful+space+opera+about+first+contact&method=hybrid"
+```
+
+- `400` — unknown `method`.
+- `503` — known method but not currently available (missing artifact or the optional DL
+  stack); `detail` says how to fix it.
+
+Concepts, trade-offs, and improvement paths for every method: **[Recommendation](../recommendation/index.md)**.
+
+</details>
+
+<details>
 <summary><strong>Not in this phase</strong></summary>
 
-Write/CRUD endpoints, AI-based contextual search, and agentic memory are later README features
-and are intentionally out of scope here — this phase is read-only search over the merged dataset.
+Write/CRUD endpoints and **personalised** (user→item) recommendation — collaborative
+filtering, matrix factorisation, sequential/neural models, agentic memory — are out of scope
+until the Goodreads interactions tier is ingested. The `/recommend` methods above are all
+query→item. See [Recommendation § Not yet built](../recommendation/index.md#not-yet-built--collaborative--neural).
 
 </details>

@@ -1,0 +1,9 @@
+# Optional deep-learning stack for the `semantic` recommendation method.
+# Not installed in the default Docker image (pulls in PyTorch, ~800MB+).
+#
+#   pip install -r requirements.txt -r requirements-dl.txt
+#   python -m src.recommend.build_artifacts --methods semantic
+#
+# Without this, `semantic` reports itself unavailable and GET /recommend?method=semantic
+# returns HTTP 503; every other method still works.
+sentence-transformers>=3.0

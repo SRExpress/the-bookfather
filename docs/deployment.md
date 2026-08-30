@@ -43,6 +43,12 @@ compose file), matching the path `src/config.py` already resolves paths against.
 
 - Rebuilding `data/bookfather.db` on the host (`python -m src.db.build_db`) is instantly visible
   to the running container - no image rebuild needed.
+- The recommendation artifacts (`data/artifacts/tfidf/`, `.../lsa/`, `.../semantic/`) live
+  under the same mounted `data/` tree, so `python -m src.recommend.build_artifacts` on the host
+  is picked up on the next container restart - again no image rebuild. The base image ships
+  scikit-learn/scipy for `tfidf`/`lsa`; the `semantic` method's PyTorch stack
+  (`requirements-dl.txt`) is deliberately **not** in the image, so `semantic` returns `503`
+  there unless you build a variant image that installs it.
 - The container cannot write to the dataset - confirmed with `docker exec bookfather-api touch
   /app/data/x` -> `Read-only file system`. The API only ever reads (`repository.get_connection()`
   opens SQLite in `mode=ro`), so this costs nothing functionally.

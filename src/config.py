@@ -10,6 +10,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = PROJECT_ROOT / "data"
 RAW_DIR = DATA_DIR
 PROCESSED_DIR = DATA_DIR / "processed"
+ARTIFACTS_DIR = DATA_DIR / "artifacts"
 LOG_DIR = PROJECT_ROOT / "logs"
 DB_PATH = DATA_DIR / "bookfather.db"
 
@@ -18,7 +19,7 @@ BOOKS_DATASET_02_DIR = RAW_DIR / "books-dataset-02"
 BEST_BOOKS_EVER_DIR = RAW_DIR / "best-books-ever-dataset"
 GOODREADS_DIR = RAW_DIR / "good-reads-book-graph-dataset"
 
-for _dir in (PROCESSED_DIR, LOG_DIR):
+for _dir in (PROCESSED_DIR, ARTIFACTS_DIR, LOG_DIR):
     _dir.mkdir(parents=True, exist_ok=True)
 
 

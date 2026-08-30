@@ -5,3 +5,10 @@ rapidfuzz>=3.9
 fastapi>=0.115
 uvicorn[standard]>=0.32
 pydantic>=2.9
+
+# Recommendation service - traditional + classic-ML + latent-factor methods.
+# The deep-learning method (semantic embeddings) is opt-in via requirements-dl.txt.
+numpy>=1.26
+scipy>=1.13
+scikit-learn>=1.5
+joblib>=1.4
