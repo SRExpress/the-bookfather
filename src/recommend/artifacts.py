@@ -29,6 +29,7 @@ logger = get_logger(__name__, log_filename="api.log")
 TFIDF_DIR = "tfidf"
 LSA_DIR = "lsa"
 SEMANTIC_DIR = "semantic"
+FEATURES_DIR = "features"
 
 
 @dataclass(slots=True)
@@ -63,10 +64,49 @@ class SemanticArtifact:
     meta: dict
 
 
+@dataclass(slots=True)
+class FeaturesArtifact:
+    """Wide table of the current-best LLM-derived feature per book, built offline by
+    :mod:`src.enrich.flatten`. Loaded here the same way as the vector artifacts so the
+    API can attach a book's features without touching the request path of any other
+    endpoint.
+    """
+
+    frame: Any  # pandas DataFrame, indexed by book_id
+    book_ids: np.ndarray
+    meta: dict
+
+    def for_book(self, book_id: int) -> dict | None:
+        """``{feature: {value, confidence, status}}`` for ``book_id``, or ``None``."""
+        import json
+
+        if book_id not in self.frame.index:
+            return None
+        row = self.frame.loc[book_id]
+        out: dict[str, dict] = {}
+        for feature in self.meta.get("features", []):
+            raw = row.get(feature)
+            if raw is None or (isinstance(raw, float) and np.isnan(raw)):
+                continue
+            try:
+                value = json.loads(raw)
+            except (TypeError, ValueError):
+                value = raw
+            conf = row.get(f"{feature}__confidence")
+            status = row.get(f"{feature}__status")
+            out[feature] = {
+                "value": value,
+                "confidence": None if conf is None or (isinstance(conf, float) and np.isnan(conf)) else float(conf),
+                "status": None if status is None or (isinstance(status, float) and np.isnan(status)) else str(status),
+            }
+        return out or None
+
+
 # Module-level cache, populated by warm_load(). None => not loaded / unavailable.
 _tfidf: TfidfArtifact | None = None
 _lsa: LsaArtifact | None = None
 _semantic: SemanticArtifact | None = None
+_features: FeaturesArtifact | None = None
 _loaded_from: Path | None = None
 
 
@@ -146,19 +186,46 @@ def _load_semantic(base: Path) -> SemanticArtifact | None:
         return None
 
 
+def _load_features(base: Path) -> FeaturesArtifact | None:
+    d = base / FEATURES_DIR
+    if not (d / "features.parquet").exists():
+        logger.debug("No features artifact at %s", d)
+        return None
+    try:
+        import pandas as pd
+
+        frame = pd.read_parquet(d / "features.parquet")
+        if "book_id" in frame.columns:
+            frame = frame.set_index("book_id")
+        art = FeaturesArtifact(
+            frame=frame,
+            book_ids=np.load(d / "book_ids.npy"),
+            meta=_read_meta(d),
+        )
+        logger.info(
+            "Loaded features artifact: %d books, features=%s (built %s)",
+            len(art.book_ids), art.meta.get("features", []), art.meta.get("built_at", "?"),
+        )
+        return art
+    except Exception:
+        logger.exception("Failed to load features artifact from %s - block omitted", d)
+        return None
+
+
 def warm_load(base: Path | None = None) -> None:
     """Load every artifact found under ``base`` into the module cache. Safe to
     call more than once (a later call reloads, e.g. after a rebuild). Never
     raises - individual failures are logged and leave that method unavailable.
     """
-    global _tfidf, _lsa, _semantic, _loaded_from
+    global _tfidf, _lsa, _semantic, _features, _loaded_from
     base = Path(base or ARTIFACTS_DIR)
     logger.info("Warm-loading recommendation artifacts from %s", base)
     _tfidf = _load_tfidf(base)
     _lsa = _load_lsa(base)
     _semantic = _load_semantic(base)
+    _features = _load_features(base)
     _loaded_from = base
-    ready = [n for n, a in (("tfidf", _tfidf), ("lsa", _lsa), ("semantic", _semantic)) if a]
+    ready = [n for n, a in (("tfidf", _tfidf), ("lsa", _lsa), ("semantic", _semantic), ("features", _features)) if a]
     logger.info("Artifact-backed methods ready: %s", ready or "none")
 
 
@@ -172,3 +239,7 @@ def get_lsa() -> LsaArtifact | None:
 
 def get_semantic() -> SemanticArtifact | None:
     return _semantic
+
+
+def get_features() -> FeaturesArtifact | None:
+    return _features

@@ -11,6 +11,10 @@ plan to give every book a **rich, structured, provenanced feature record** so th
 "a hopeful book praised by a founder, nothing too violent, that has aged well" become
 answerable.
 
+> **Build status:** Stages 1–2 of §9 are implemented — see
+> **[LLM Feature Enrichment](../enrichment/index.md)** for the shipped framework, the
+> `book_features` schema, the offline CLI, and the six live features.
+
 ---
 
 ## 1. Principles
@@ -580,102 +584,3 @@ flowchart LR
    plug the feature record into the item tower / bridge `g`.
 
 ---
-
-## 10. Implementation prompt (paste into a new session)
-
-<details open>
-<summary><strong>Prompt</strong></summary>
-
-```text
-You are working in the-bookfather repo. First read, in full:
-  CLAUDE.md
-  docs/recommendation/index.md
-  docs/recommendation/llm-derived-features.md   ← the plan you are implementing
-  src/config.py
-  src/db/schema.sql, src/db/build_db.py
-  src/cleaning/pipeline.py, src/cleaning/readers.py
-  src/recommend/registry.py, src/recommend/artifacts.py, src/recommend/build_artifacts.py
-  src/api/main.py, src/api/schemas.py, src/api/repository.py
-Also invoke the `claude-api` skill before writing any LLM-calling code, and follow CLAUDE.md
-(SOLID, exception handling, info logs for major events, debug logs for minor calls, stdout +
-rotating file via src/config.get_logger).
-
-GOAL — implement Stage 1 + Stage 2 of docs/recommendation/llm-derived-features.md:
-the enrichment framework, the schema, and the first 6 features, over a bounded slice of books.
-
-DELIVERABLES
-
-1. Schema (src/db/schema.sql + a migration path in build_db.py):
-   add tables book_features, people, book_people, book_accolades, book_relations exactly as
-   sketched in §3 of the plan (JSON value columns, confidence, full provenance:
-   source/evidence/model/prompt_version/status/extracted_at). Add indexes shown. Do NOT widen
-   the `books` table.
-
-2. src/enrich/ package, mirroring the structure of src/recommend/:
-   - base.py       Feature ABC: name, family, feature_type (extractive|rag|judgment|derived),
-                   prompt_version, output Pydantic schema, and extract(book_ctx) -> FeatureRow.
-   - client.py     provider-agnostic LLM client per the claude-api skill; batching; raw-response
-                   cache keyed by (book_id, family, prompt_version, model); --dry-run that prints
-                   the rendered prompt + token/cost estimate and writes nothing; retry-once then
-                   route-to-review on invalid JSON.
-   - schemas.py    Pydantic models for each feature's output + FeatureRow (the row written to
-                   book_features).
-   - registry.py   FEATURES dict + get()/list(); Stage-2 set registered:
-                   five_sentence_summary, one_line, storytelling_type, lessons, test_of_time,
-                   emotion_profile.
-   - features/     one module per feature; strict JSON, spoiler-free constraint on summaries,
-                   rubric text embedded for judgment features, confidence + evidence span
-                   populated. emotion_profile: LLM prior only for now (lexical scorer +
-                   online updater are a later stage) but emit the per-emotion
-                   {intensity, confidence} vector over the ontology in §4.1.
-   - persist.py    upsert FeatureRows into the new tables; status='needs_review' when
-                   confidence < threshold or (feature_type=='rag' and no citation).
-   - build_features.py   offline CLI, same ergonomics as build_artifacts.py:
-                   python -m src.enrich.build_features --features <csv|all> --max-books N
-                   [--model ...] [--dry-run] [--db PATH]
-                   selects top-N books by COALESCE(ratings_count,0) DESC that have a
-                   description; logs per-stage INFO, per-book DEBUG, cost + counts summary;
-                   re-runnable; idempotent via the (book_id,feature,prompt_version) PK.
-   - flatten.py    build data/artifacts/features/ : a parquet of the current best feature per
-                   book (max prompt_version, status != rejected) + book_ids.npy + meta.json,
-                   loadable by src/recommend/artifacts.py the same way tfidf/lsa/semantic are.
-
-3. Wire-in (thin, non-breaking):
-   - src/recommend/artifacts.py: add get_features() + warm_load of data/artifacts/features/.
-   - src/api/main.py: extend GET /books/{book_id} response with an optional `features` block
-     when present. Do NOT change existing response shapes for search/recommend.
-   - src/config.py: no new dirs needed beyond ARTIFACTS_DIR (features live under it).
-
-4. Tests (pytest, no network / no paid API — mock the LLM client):
-   - schema creates cleanly; PK/idempotency on re-run.
-   - each feature module: given a canned book context + a stubbed LLM JSON response, produces a
-     valid FeatureRow with provenance populated; invalid JSON → review path.
-   - flatten.py produces a parquet whose row count == distinct enriched book_ids.
-   - --dry-run writes nothing and returns a cost estimate.
-
-5. Docs:
-   - new docs/enrichment/index.md (hierarchical, details/summary, one mermaid, dark/light
-     friendly, <=10 stroke-only colours, A4) covering: the tables, the CLI, prompt-version
-     policy, review queue, cost controls, and a status table of which features are live.
-   - link it from docs/index.md and from docs/recommendation/llm-derived-features.md.
-   - update README.md "Current state" with an "LLM feature enrichment (Stage 1-2)" row.
-
-CONSTRAINTS
-   - Enrich only the slice passed via --max-books; default 5000 for a cheap first run.
-   - Every written row MUST have model, prompt_version, extracted_at, and either evidence span
-     (extractive) or citation (rag) or formula (derived).
-   - Keep base requirements.txt changes minimal; if an LLM SDK is needed, add it and note it.
-   - No feature is trusted as fact without a citation — enforce in persist.py.
-
-VERIFY at the end:
-   python -m src.enrich.build_features --features all --max-books 50 --dry-run   # prints cost, writes nothing
-   python -m src.enrich.build_features --features five_sentence_summary,emotion_profile --max-books 50
-   python -m src.enrich.flatten
-   pytest -q
-   python -m uvicorn src.api.main:app --port 8080 &   then   curl localhost:8080/books/<an_enriched_id>
-   # show that /books/search and /recommend responses are unchanged.
-
-Produce a short plan first (EnterPlanMode), then implement.
-```
-
-</details>

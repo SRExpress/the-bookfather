@@ -22,6 +22,7 @@ agentic recommendation layer as the destination.
 | Goodreads Book Graph downloader (idempotent, tiered) | ✅ Done | [`src/datasets/goodreads_downloader.py`](src/datasets/goodreads_downloader.py) |
 | Read-only search API (FTS5 string match, book detail, similar-books, genre browse) | ✅ Done | [`src/api/main.py`](src/api/main.py) |
 | Query→book recommendation service — 6 methods, efficient→intelligent | ✅ Done | [`src/recommend/`](src/recommend/), [docs/recommendation/index.md](docs/recommendation/index.md) |
+| LLM feature enrichment (Stage 1–2) — schema, provider-agnostic client, 6 provenanced features, parquet artifact | ✅ Done | [`src/enrich/`](src/enrich/), [docs/enrichment/index.md](docs/enrichment/index.md) |
 | Personalised (user→book) recommendation — collaborative / neural | 🔭 Vision | needs Goodreads interactions tier |
 | Dockerized service (small image, data bind-mounted read-only) | ✅ Done | [`docker/`](docker/), [docs/deployment.md](docs/deployment.md) |
 | Hierarchical project documentation | ✅ Done | [`docs/`](docs/) |

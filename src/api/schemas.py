@@ -1,5 +1,7 @@
 """Pydantic response models for the search API."""
 
+from typing import Any
+
 from pydantic import BaseModel
 
 
@@ -22,6 +24,10 @@ class BookDetail(BookSummary):
     ratings_count: int | None = None
     price: float | None = None
     genres: list[str]
+    #: LLM-derived feature record, present only when the book has been enriched
+    #: (see src/enrich/ and docs/enrichment/index.md). Shape:
+    #: ``{feature: {value, confidence, status}}``. Absent otherwise.
+    features: dict[str, Any] | None = None
 
 
 class SearchResponse(BaseModel):

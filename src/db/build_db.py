@@ -1,12 +1,17 @@
 """Load data/processed/*.parquet into the SQLite database defined by schema.sql.
 
 Usage:
-    python -m src.db.build_db
+    python -m src.db.build_db                 # full rebuild from processed parquet
+    python -m src.db.build_db --features-only  # apply just the enrichment tables to an
+                                              # existing DB, without dropping anything
 
-Re-runnable: drops and recreates data/bookfather.db from scratch each time, so it always
-reflects the latest processed parquet output.
+Re-runnable: the full build drops and recreates data/bookfather.db from scratch each time,
+so it always reflects the latest processed parquet output. ``--features-only`` is the
+migration path for the LLM feature-enrichment tables (schema_features.sql) onto a database
+that already exists and is too large to rebuild casually.
 """
 
+import argparse
 import sqlite3
 import sys
 from pathlib import Path
@@ -18,6 +23,7 @@ from src.config import DB_PATH, PROCESSED_DIR, get_logger
 logger = get_logger(__name__, log_filename="db_build.log")
 
 SCHEMA_PATH = Path(__file__).with_name("schema.sql")
+FEATURE_SCHEMA_PATH = Path(__file__).with_name("schema_features.sql")
 
 
 def _load_processed() -> tuple[pd.DataFrame, pd.DataFrame]:
@@ -29,9 +35,42 @@ def _load_processed() -> tuple[pd.DataFrame, pd.DataFrame]:
     return pd.read_parquet(books_path), pd.read_parquet(sources_path)
 
 
+def apply_feature_schema(conn: sqlite3.Connection) -> None:
+    """Execute schema_features.sql on an open connection. Idempotent (every statement is
+    IF NOT EXISTS); the caller owns the transaction/commit.
+    """
+    conn.executescript(FEATURE_SCHEMA_PATH.read_text())
+
+
 def _create_schema(conn: sqlite3.Connection) -> None:
     logger.info("Creating schema from %s", SCHEMA_PATH)
     conn.executescript(SCHEMA_PATH.read_text())
+    logger.info("Applying feature-enrichment schema from %s", FEATURE_SCHEMA_PATH)
+    apply_feature_schema(conn)
+
+
+def migrate_features(db_path: Path = DB_PATH) -> None:
+    """Idempotently apply the LLM feature-enrichment tables/indexes to an existing DB.
+
+    Safe to call repeatedly - every statement in schema_features.sql is IF NOT EXISTS.
+    Used both by ``python -m src.db.build_db --features-only`` and lazily by
+    :mod:`src.enrich.persist` so the enrichment CLI works against the live database
+    without a full rebuild.
+    """
+    if not db_path.exists():
+        raise FileNotFoundError(f"Database not found at {db_path} - run a full build first")
+    logger.info("Migrating feature-enrichment schema into %s", db_path)
+    conn = sqlite3.connect(db_path)
+    try:
+        apply_feature_schema(conn)
+        conn.commit()
+        logger.info("Feature-enrichment schema present in %s", db_path)
+    except Exception:
+        conn.rollback()
+        logger.exception("Feature-enrichment migration failed - rolled back")
+        raise
+    finally:
+        conn.close()
 
 
 def _insert_books(conn: sqlite3.Connection, books_df: pd.DataFrame) -> None:
@@ -172,8 +211,20 @@ def build(db_path=DB_PATH) -> None:
         conn.close()
 
 
-def main() -> int:
-    build()
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Build or migrate the Bookfather SQLite database.")
+    parser.add_argument(
+        "--features-only",
+        action="store_true",
+        help="Apply only the LLM feature-enrichment tables to the existing DB (no drop/reload).",
+    )
+    parser.add_argument("--db", type=Path, default=DB_PATH)
+    args = parser.parse_args(argv)
+
+    if args.features_only:
+        migrate_features(args.db)
+    else:
+        build(args.db)
     return 0
 
 

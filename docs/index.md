@@ -28,6 +28,7 @@ See the top-level [README.md](../README.md) for the full product feature list.
 | [API](api/endpoints.md) | Search + recommendation endpoints, request/response shapes |
 | [Recommendation](recommendation/index.md) | The 6 query→book methods (efficient→intelligent): concept, pros/cons, how to improve |
 | [LLM-Derived Features](recommendation/llm-derived-features.md) | Plan: structured per-book features from an LLM (endorsements, craft, emotion, test-of-time…), the self-correcting emotion engine, and how they feed personalised recs |
+| [LLM Feature Enrichment](enrichment/index.md) | Built (Stage 1–2): the enrichment framework, `book_features` schema, provider-agnostic client, the offline CLI, and the first six live features |
 
 ## Pipeline at a glance
 

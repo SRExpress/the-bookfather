@@ -83,6 +83,16 @@ def get_book(book_id: int, conn: sqlite3.Connection = Depends(get_db)):
     if book is None:
         logger.debug("Book not found: book_id=%d", book_id)
         raise HTTPException(status_code=404, detail=f"book_id {book_id} not found")
+
+    # Additive: attach the LLM-derived feature record when this book has been enriched.
+    # Never changes the response for un-enriched books, or for any other endpoint.
+    features_art = rec_artifacts.get_features()
+    if features_art is not None:
+        try:
+            book["features"] = features_art.for_book(book_id)
+        except Exception:  # noqa: BLE001 - a features lookup must never break book detail
+            logger.exception("features lookup failed for book_id=%d", book_id)
+
     return BookDetail(**book)
 
 
